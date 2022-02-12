@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import similaridade as simi
+import metodosPotencia as metPot
 
 ## decomposição.py possui as funções de decomposição
 ## main() apenas para testes
@@ -174,7 +175,7 @@ def contructQR(M, j):
 
 def decomposicaoSVD(M, eps):
   MtM = M.transpose() @ M
-  MMt = M.transpose() @ M
+  MMt = M @ M.transpose()
   [MtMLines, MtMColumns] = np.shape(M)
   [MtMLines, MtMColumns] = np.shape(MtM)
   [MMtLines, MMtColumns] = np.shape(MMt)
@@ -182,9 +183,10 @@ def decomposicaoSVD(M, eps):
   [MtMeigenValues, V] = simi.QR(MtM, np.eye(min(MtMLines, MtMColumns)), eps)
   [MMteigenValues, U] = simi.QR(MMt, np.eye(min(MMtLines, MMtColumns)), eps)
 
-  S = np.eye(MtMLines, MtMColumns)
+  S = np.zeros(np.shape(M))
+  qtdEigenValues = min(np.shape(M))
 
-  for i in range(len(MtMeigenValues)):
+  for i in range(qtdEigenValues):
     S[i, i] = np.sqrt(MtMeigenValues[i])
 
   return [U, S, V]
@@ -196,6 +198,7 @@ def main ():
   #x = resolutionLU(L, U, b)
   #print("\n\nL:\n{}\n\nU:\n{}\n\nL * U:\n{}\n\nx:\n{}\n\n LU * x:\n{}".format(L, U, L @ U, x, L @ U @ x))
   C = np.array([[2.0, 2.0, 3.0],[2.0, 3.0, 4.0],[3.0, 4.0, 6.0]])
+  D = np.array([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]])
   
   #try:
   #  S = cholesky(C)
@@ -203,9 +206,11 @@ def main ():
   #except ValueError as error:
   #  print(error)
   
-  A = RREF(C, 0.0001)
+  #A = RREF(C, 0.0001)
+  [U, S, V] = decomposicaoSVD(D, 0.0001)
 
-  print("Matriz:\n{}\nRank:\n{}\nEspaço nulo:\n{}\n".format(A[0], A[1], A[2]))
+  #print("Matriz:\n{}\nRank:\n{}\nEspaço nulo:\n{}\n".format(A[0], A[1], A[2]))
+  print("U:\n{}\n\nS:\n{}\n\nV:\n{}\n\nU * S * Vt:\n{}\n".format(U, S, V, U @ S @ V.transpose()))
 
 
 if __name__ == "__main__":

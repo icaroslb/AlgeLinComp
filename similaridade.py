@@ -1,7 +1,8 @@
 import math
 import numpy as np
 import decomposicao as decomp
-import regressao as regre
+#import regressao as regre
+import metodosPotencia as metPot
 
 def Householder (M):
   A = M.copy()
@@ -62,7 +63,6 @@ def QR (M, P, eps):
   for i in range(qtdLines):
     for j in range(qtdColumns):
       if (abs(M[i, j] - M[j, i]) > eps):
-        print(M[i, j] - M[j, i])
         diagonalMatrix = False
         break
   
@@ -72,7 +72,8 @@ def QR (M, P, eps):
     return [[A[i, i] for i in range(qtdColumns)], P]
   else:
     eigenValues = []
-    eigenVectorsMatrix = np.zeros((qtdLines, qtdColumns))
+    eigenVectorsMatrix = np.zeros((qtdLines, qtdColumns), dtype=complex)
+    listEigenValues = []
 
     id = 0
     while (id < qtdLines):
@@ -82,25 +83,93 @@ def QR (M, P, eps):
         eigenValues.append(roots[0])
         eigenValues.append(roots[1])
         id += 1
+        listEigenValues.append(2)
       else:
         eigenValues.append(A[id, id])
+        listEigenValues.append(1)
       
       id += 1
     
+    x0 = np.ones((qtdLines, 1), dtype=complex)
     for i in range(qtdColumns):
-      autoMatrix = A - (eigenValues[i] * np.eye(qtdColumns))
-      eigenVectorsMatrix[:, i] = regre.minQuadrado(autoMatrix, np.zeros((qtdLines, 1))).transpose()
+      autoMatrix = A - (eigenValues[i] * np.eye(qtdColumns, dtype=complex))
+      listEigenValuesAux = listEigenValues.copy()
+
+      eigenVectorsMatrix[:, i] = backSubstituionQR(autoMatrix, listEigenValuesAux, eps).transpose()
     
-    return [eigenValues, eigenVectorsMatrix]
+    return [eigenValues, P @ eigenVectorsMatrix]
+
+def backSubstituionQR(M, listEigenValues, eps):
+  qtdColumns = np.shape(M)[1]
+  i = qtdColumns - 1
+  eigenVectors = np.zeros((qtdColumns, 1), dtype=complex)
+
+  while (len(listEigenValues) > 0):
+    qtdLines = listEigenValues.pop()
+    iValue = 0.0
+    iValue1 = 0.0
+    iValue2 = 0.0
+
+    # Cálculo do bloco
+    if (qtdLines == 2):
+      [M[i - 1:i + 1, i - 1:qtdColumns], rank, dimentionNull, columnPivots] = decomp.RREF(M[i - 1:i + 1, i - 1:qtdColumns], eps)
+      
+      # Quando o bloco só tem um pivô
+      if (rank > 1 and columnPivots[1] == 2):
+        for k in range(i + 1, qtdColumns):
+          iValue1 -= M[i, k] * eigenVectors[k, 0]
+          iValue2 -= M[i - 1, k] * eigenVectors[k, 0]
+
+        # Definindo o primeiro variável
+        if (abs(M[i, i]) < eps and abs(iValue1) < eps):
+          eigenVectors[i, 0] = 1.0
+        else:
+          eigenVectors[i, 0] = iValue1 / M[i, i]
+        
+        iValue2 -= M[i - 1, i] * eigenVectors[i, 0]
+
+        # Definindo a segunda variável
+        if (abs(M[i - 1, i - 1]) < eps and abs(iValue2) < eps):
+          eigenVectors[i - 1, 0] = 1.0
+        else:
+          eigenVectors[i - 1, 0] = iValue2 / M[i - 1, i - 1]
+      
+      # Quando o bloco tem os dois pivôs
+      else:
+        eigenVectors[i, 0] = 1.0
+        for k in range(i, qtdColumns):
+          iValue -= M[i - 1, k] * eigenVectors[k, 0]
+        
+        if (abs(M[i - 1, i - 1]) < eps and abs(iValue) < eps):
+          eigenVectors[i - 1, 0] = 1.0
+        else:
+          eigenVectors[i - 1, 0] = iValue / M[i - 1, i - 1]
+    
+    # Cálculo da linha
+    else:
+      for k in range(i, qtdColumns):
+        iValue -= M[i, k] * eigenVectors[k, 0]
+      
+      if (abs(M[i, i]) < eps and abs(iValue) < eps):
+        eigenVectors[i, 0] = 1.0
+      else:
+        eigenVectors[i, 0] = iValue / M[i, i]
+        
+    
+    i -= qtdLines
+  
+  return eigenVectors
 
 def main ():
-  C = np.array([[2.0, 2.0, 3.0],[2.0, 5.0, 4.0],[3.0, 4.0, 6.0]])
+  #C = np.array([[2.0, 5.0, 3.0],[2.0, 5.0, 4.0],[3.0, 4.0, 6.0]])
+  #C = np.array([[2.0, 5.0, 3.0],[2.0, 5.0, 4.0],[3.0, 3.0, 6.0]])
+  C = np.array([[1.0, 2.0, 3.0],[4.0, 5.0, 6.0],[7.0, 8.0, 9.0]])
   
   #[A, H] = Householder(C)
   [eigenValues, eigenVectors] = QR(C, np.eye(3), 0.000001)
-
-  #for i in range(3):
-  #  eigenVectors[:, i] = eigenVectors[:, i] / eigenVectors[2, i]
+  
+  for i in range(3):
+    eigenVectors[:, i] = eigenVectors[:, i] / max(eigenVectors[:, i])
   #print("Matriz:\n{}\n\nHouseholder\n{}".format(A, H))
   print("Autovalores:\n{}\n\nAutovetores:\n{}".format(eigenValues, eigenVectors))
 
