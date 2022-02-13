@@ -2,6 +2,7 @@ import numpy as np
 import math
 import similaridade as simi
 import metodosPotencia as metPot
+import ortogonalizacao as ort
 
 ## decomposição.py possui as funções de decomposição
 ## main() apenas para testes
@@ -169,25 +170,59 @@ def contructQR(M, j):
   w[j, 0] = jSign * lenghtV
 
   N = v - w
-  n = N / np.linalg.norm(N)
+  norm = np.linalg.norm(N)
+  if (norm != 0):
+    n = N / norm
+  else:
+    n = N
   
   return np.eye(qtdLines) - (2.0 * (n @ n.transpose()))
 
 def decomposicaoSVD(M, eps):
-  MtM = M.transpose() @ M
-  MMt = M @ M.transpose()
-  [MtMLines, MtMColumns] = np.shape(M)
-  [MtMLines, MtMColumns] = np.shape(MtM)
-  [MMtLines, MMtColumns] = np.shape(MMt)
-  
-  [MtMeigenValues, V] = simi.QR(MtM, np.eye(min(MtMLines, MtMColumns)), eps)
-  [MMteigenValues, U] = simi.QR(MMt, np.eye(min(MMtLines, MMtColumns)), eps)
+  [qtdLinesM, qtdColumnsM] = np.shape(M)
+  qtdEigenValues = min(qtdLinesM, qtdColumnsM)
+  firstZero = -1
 
-  S = np.zeros(np.shape(M))
-  qtdEigenValues = min(np.shape(M))
+  #Se tiver mais linhas, fazer A * V = U * S
+  if (qtdColumnsM > qtdLinesM):
+    MM = M.transpose() @ M
+    [MMLines, MMColumns] = np.shape(MM)
 
-  for i in range(qtdEigenValues):
-    S[i, i] = np.sqrt(MtMeigenValues[i])
+    [MMeigenValues, V] = simi.QR(MM, np.eye(min(MMLines, MMColumns)), eps)
+    U = (M @ V)[:, 0:qtdLinesM]
+    S = np.zeros(np.shape(M))
+
+    for i in range(qtdEigenValues):
+      if (abs(MMeigenValues[i]) < eps):
+        S[i, i] = 0.0
+        if (firstZero < 0):
+          firstZero = i
+      else:  
+        S[i, i] = np.sqrt(MMeigenValues[i])
+        U[:, i] = U[:, i] / S[i, i]
+
+    if (firstZero >= 0):
+      U = ort.gramSchmidt(U[:,0:firstZero], eps)
+    
+  #caso contrário, fazer Ut * A = S * Vt
+  else:
+    MM = M @ M.transpose()
+    [MMLines, MMColumns] = np.shape(MM)
+    [MMeigenValues, U] = simi.QR(MM, np.eye(min(MMLines, MMColumns)), eps)
+    V = (U.transpose() @ M)[0:qtdColumnsM, :].transpose()
+    S = np.zeros(np.shape(M))
+
+    for i in range(qtdEigenValues):
+      if (abs(MMeigenValues[i]) < eps):
+        S[i, i] = 0.0
+        if (firstZero < 0):
+          firstZero = i
+      else:  
+        S[i, i] = np.sqrt(MMeigenValues[i])
+        V[:, i] = V[:, i] / S[i, i]
+
+    if (firstZero >= 0):
+      V = ort.gramSchmidt(V[:,0:firstZero], eps)
 
   return [U, S, V]
 
@@ -197,8 +232,10 @@ def main ():
   #(L, U) = LU(M)
   #x = resolutionLU(L, U, b)
   #print("\n\nL:\n{}\n\nU:\n{}\n\nL * U:\n{}\n\nx:\n{}\n\n LU * x:\n{}".format(L, U, L @ U, x, L @ U @ x))
-  C = np.array([[2.0, 2.0, 3.0],[2.0, 3.0, 4.0],[3.0, 4.0, 6.0]])
-  D = np.array([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]])
+  #C = np.array([[2.0, 2.0, 3.0],[2.0, 3.0, 4.0],[3.0, 4.0, 6.0]])
+  #D = np.array([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]])
+  #C = np.array([[2.0, 5.0, 3.0],[2.0, 5.0, 4.0],[3.0, 3.0, 6.0]])
+  C = np.array([[1.0, 2.0, 3.0],[4.0, 5.0, 6.0],[7.0, 8.0, 9.0]])
   
   #try:
   #  S = cholesky(C)
@@ -207,7 +244,7 @@ def main ():
   #  print(error)
   
   #A = RREF(C, 0.0001)
-  [U, S, V] = decomposicaoSVD(D, 0.0001)
+  [U, S, V] = decomposicaoSVD(C, 0.0001)
 
   #print("Matriz:\n{}\nRank:\n{}\nEspaço nulo:\n{}\n".format(A[0], A[1], A[2]))
   print("U:\n{}\n\nS:\n{}\n\nV:\n{}\n\nU * S * Vt:\n{}\n".format(U, S, V, U @ S @ V.transpose()))
