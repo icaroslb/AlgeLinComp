@@ -37,6 +37,19 @@ def gauss(M, eps):
   
   return MInv
 
+def resolutionGauss (M, b):
+  x = np.zeros(np.shape(b))
+  size = np.shape(b)[0]
+
+  for i in range(size - 1, -1, -1):
+    x[i, 0] = b[i, 0]
+    for j in range(size - 1, i, -1):
+      x[i, 0] = x[i, 0] - (M[i, j] * x[j, 0])
+      
+    x[i, 0] = x[i, 0] / M[i, i]
+  
+  return x
+
 def gaussJordan(M, eps):
   copy = M.copy()
   size = np.shape(copy)

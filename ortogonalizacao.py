@@ -13,6 +13,8 @@ def gramSchmidt(M, eps):
   A = np.zeros((qtdLines, qtdLines))
   for i in range(qtdLines):
     A[:, i] = AExtended[:, columnPivot[i]]
+
+  print(A)
   
   A[:, 0] = A[:, 0] / np.linalg.norm(A[:, 0])
   
@@ -32,10 +34,12 @@ def ortogonalizacaoVetor(v, conjV):
 
 def main():
   M = np.array([[1.0, 2.0, 3.0], [2.0, 4.0, 6.0]])
+  M = np.array([[1, 3, 3, -7, 5], [2, 6, 5, -8, 1], [3, 9, 5, -3, -2], [4, 12, 5, 2, -5]])
   
-  A = gramSchmidt(M)
+  A = gramSchmidt(M, 0.00001)
 
-  print(A)
+  print(A.transpose() @ A)
 
 if __name__ == "__main__":
+
   main()

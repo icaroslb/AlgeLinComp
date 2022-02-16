@@ -1,7 +1,7 @@
 import numpy as np
 import gauss
 
-def SOR(M, omega, b, eps):
+def SOR(M, omega, b, eps, maxIterations = np.Infinity):
   MShape = np.shape(M)
   L = np.zeros(MShape)
   D = np.zeros(MShape)
@@ -25,9 +25,13 @@ def SOR(M, omega, b, eps):
   x = np.ones((MShape[0], 1))
   b1 = M @ x
 
-  while (np.linalg.norm(b1 - b) > eps):
+  iteration = 0
+
+  while (np.linalg.norm(b1 - b) > eps and iteration < maxIterations):
     x = (MSOR @ x) + ySOR
     b1 = M @ x
+
+    iteration += 1
   
   return x
 
@@ -56,15 +60,15 @@ def main ():
   #b = np.array([[0.0],[1.0],[0.0]])
   #b = np.array([[1.0],[2.0],[3.0]])
 
-  #A = np.array([[4.0, -1.0, -6.0, 0.0], [-5.0, -4.0, 10.0, 8.0], [0.0, 9.0, 4.0, -2.0], [1.0, 0.0, -7.0, 5.0]])
-  #b = np.array([[2.0], [21.0], [-12.0], [-6.0]])
-  A = np.array([[1.0, 2.0, 3.0],[4.0, 5.0, 6.0],[7.0, 8.0, 9.0]])
+  A = np.array([[4.0, -1.0, -6.0, 0.0], [-5.0, -4.0, 10.0, 8.0], [0.0, 9.0, 4.0, -2.0], [1.0, 0.0, -7.0, 5.0]])
+  b = np.array([[2.0], [21.0], [-12.0], [-6.0]])
+  #A = np.array([[1.0, 2.0, 3.0],[4.0, 5.0, 6.0],[7.0, 8.0, 9.0]])
   #A = np.array([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
-  b = np.array([[1.0], [2.0], [3.0]])
+  #b = np.array([[1.0], [2.0], [3.0]])
   
 
   #x = SOR(C, 1.1, b, 0.00001)
-  #x = SOR(A, 0.5, b, 0.00001)
+  #x = SOR(A, 0.5, b, 0.00001, 100)
 
   x = gradienteConjugado(A, b, 0.00001)
 
