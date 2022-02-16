@@ -1,3 +1,4 @@
+from cmath import inf
 import numpy as np
 import gauss
 import decomposicao
@@ -11,7 +12,7 @@ def metPotencia (M, x, eps):
   autoVector = x /np.linalg.norm(x)
   nextY = autoVector
   autoValue = 1
-  nextAutoValue = 0
+  nextAutoValue = inf
 
   while (error > eps):
     nextY = M @ autoVector

@@ -183,7 +183,7 @@ def decomposicaoSVD(M, eps):
   qtdEigenValues = min(qtdLinesM, qtdColumnsM)
   firstZero = -1
 
-  #Se tiver mais linhas, fazer A * V = U * S
+  #Se tiver mais colunas, fazer A * V = U * S
   if (qtdColumnsM > qtdLinesM):
     MM = M.transpose() @ M
     [MMLines, MMColumns] = np.shape(MM)
